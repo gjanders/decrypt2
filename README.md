@@ -160,6 +160,9 @@ New lines can be used to break up command sequences for easier readability.
 Shannon Davis (Splunk)
 
 # Release Notes
+## 2.3.3
+Minor update to license file
+
 ## 2.3.2
 Fork of version 2.3.1 of DECRYPT app from SplunkBase (under MIT license)
 - Updated python SDK to version 1.6.15
