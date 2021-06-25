@@ -33,8 +33,6 @@ class DecryptCommand(StreamingCommand):
 
             except Exception as e:
                 exception_string = str(e)
-
-            finally:
                 record[".decrypt_failure__"] = exception_string 
 
             yield record

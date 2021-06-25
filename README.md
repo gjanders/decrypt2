@@ -25,6 +25,7 @@ The following example will transform the sourcetype field into its hex represent
 
 `... | decrypt field=sourcetype hex() emit('sourcetype')`
 Note: Fields must be output via the emit function. The input field is not modified in place.
+If the emit function is not mentioned, an emit('decrypted') is automatically added so the data is output
 
 # Arguments
 ## field
@@ -161,7 +162,9 @@ Shannon Davis (Splunk)
 
 # Release Notes
 ## 2.3.3
-Minor update to license file
+- Minor update to license file
+- The field `.decrypt_failure__` is not only output when there is an error (previously always output)
+- If the emit function is ommitted, the output now defaults to 'decrypted' as the field name
 
 ## 2.3.2
 Fork of version 2.3.1 of DECRYPT app from SplunkBase (under MIT license)

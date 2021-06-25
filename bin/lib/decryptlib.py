@@ -265,10 +265,15 @@ def getargs(g):
     return args
 
 def parsestmt(s):
+    # always emit the decrypted value even if not requested
+    if s.find("emit(") == -1:
+        s = s + " emit('decrypted') "
+
     try:
         g = Tokenizer(s)
     except:
         raise Exception("syntax error") 
+
     for toknum, tokval, _, _, _ in g:
         cmd = None
 
@@ -327,4 +332,3 @@ def parsestmt(s):
 
         else:
             raise Exception("'%s' is not a recognized command" % cmd)
-
