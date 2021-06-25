@@ -161,6 +161,8 @@ New lines can be used to break up command sequences for easier readability.
 Shannon Davis (Splunk)
 
 # Release Notes
+## 2.3.4
+
 ## 2.3.3
 - Minor update to license file
 - The field `.decrypt_failure__` is not only output when there is an error (previously always output)
