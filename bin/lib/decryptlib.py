@@ -79,7 +79,7 @@ def FN_rotx(data, args):
 
     if type(data) != str:
         raise Exception("rotx(): ROT only supports alphabetical characters A-Z")
- 
+
     left = 'abcdefghijklmnopqrstuvwxyz'
     right = left[count:] + left[:count]
     def translate(c):
@@ -119,7 +119,7 @@ def FN_rol(data, args):
 def FN_btoa(data, args):
     if PY2:
         return base64.b64encode(data)
-    return base64.b64encode(data.encode() if type(data) == str else data).decode("ascii") 
+    return base64.b64encode(data.encode() if type(data) == str else data).decode("ascii")
 
 @numargs(0)
 def FN_atob(data, args):
@@ -167,7 +167,7 @@ def FN_xor(data, args):
     if PY2:
         if type(key) == unicode:
             key = str(key)
-    
+
     if type(key) != int:
         if len(key) < len(data):
             key = key * (int(len(data) / len(key)) + 1)
@@ -183,8 +183,8 @@ def FN_xor(data, args):
 
     if PY2:
         return ''.join([chr(c) for c in res])
-   
-    return bytes(res) 
+
+    return bytes(res)
 
 @numargs(1)
 def FN_rc4(data, args):
@@ -232,7 +232,7 @@ def getargs(g):
         return args
 
     if tokval != "(":
-        raise Exception("syntax error") 
+        raise Exception("syntax error")
 
     while True:
         toknum, tokval = g.next()[0:2]
@@ -258,7 +258,7 @@ def getargs(g):
         elif toknum == tokenize.NUMBER:
             tokval = int(tokval, 0)
         else:
-            raise Exception("syntax error") 
+            raise Exception("syntax error")
 
         args = args + (tokval,)
 
@@ -272,7 +272,7 @@ def parsestmt(s):
     try:
         g = Tokenizer(s)
     except:
-        raise Exception("syntax error") 
+        raise Exception("syntax error")
 
     for toknum, tokval, _, _, _ in g:
         cmd = None
