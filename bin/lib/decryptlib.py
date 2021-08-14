@@ -63,6 +63,27 @@ def FN_emit(data, args):
     g_record[field] = emit
     return data
 
+@numargs(1)
+def FN_decode(data, args):
+    codec, = args
+    try:
+        data = data.decode(codec, 'replace') if isinstance(data, bytes) else data
+    except LookupError:
+        raise Exception("the codec '%s' is not valid" % codec)
+    return data
+
+@numargs(0)
+def FN_escape(data, args):
+    data = data if isinstance(data, bytes) else data.encode("utf8", errors="ignore")
+    data = "".join(data.replace(b"\\", b"\\\\").decode("ascii", errors="backslashreplace"))
+    return data
+
+@numargs(0)
+def FN_unescape(data, args):
+    data = data if isinstance(data, bytes) else data.encode("latin1", errors="ignore")
+    data = data.decode("unicode_escape").encode("latin1")
+    return data
+
 @numargs(0)
 def FN_hex(data, args):
     if PY2:
@@ -329,6 +350,15 @@ def parsestmt(s):
 
         elif cmd == "ascii":
             yield FN_ascii, getargs(g)
+
+        elif cmd == "decode":
+            yield FN_decode, getargs(g)
+
+        elif cmd == "escape":
+            yield FN_escape, getargs(g)
+
+        elif cmd == "unescape":
+            yield FN_unescape, getargs(g)
 
         else:
             raise Exception("'%s' is not a recognized command" % cmd)
