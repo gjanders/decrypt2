@@ -237,6 +237,22 @@ def FN_rc4(data, args):
 
     return bytes(res)
 
+@numargs(2)
+def FN_tr(data, args):
+    trans_from, trans_to = args
+    if PY2:
+        data = data if isinstance(data, str) else data.encode('utf8')
+        trans_chars = string.maketrans(trans_from, trans_to)
+    else:
+        if isinstance(data, bytes):
+            trans_from = trans_from if isinstance(trans_from, bytes) else trans_from.encode('utf8')
+            trans_to = trans_to if isinstance(trans_to, bytes) else trans_to.encode('utf8')
+            trans_chars = bytes.maketrans(trans_from, trans_to)
+        else:
+            trans_from = trans_from.decode('utf8') if isinstance(trans_from, bytes) else trans_from
+            trans_to = trans_to.decode('utf8') if isinstance(trans_to, bytes) else trans_to
+            trans_chars = str.maketrans(trans_from, trans_to)
+    return data.translate(trans_chars)
 
 def getargs(g):
     global g_record
@@ -359,6 +375,9 @@ def parsestmt(s):
 
         elif cmd == "unescape":
             yield FN_unescape, getargs(g)
+
+        elif cmd == "tr":
+            yield FN_tr, getargs(g)
 
         else:
             raise Exception("'%s' is not a recognized command" % cmd)
