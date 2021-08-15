@@ -93,8 +93,8 @@ Outputs the current state as UTF-8 to the field name.
 `substr(offset, count)`
 Returns a substring of the input, starting at the index offset with the number of characters count.
 
-`decode(codec)`
-Returns a decoded version of the input based on the codec, python codec list is available on https://docs.python.org/3/library/codecs.html#standard-encodings
+`decode('codec')`
+Returns a decoded version of the input based on the codec, python codec list is available on https://docs.python.org/3/library/codecs.html#standard-encodings , please use single quotes around the codec
 
 `escape`
 Returns a string with \ escaped by \\
