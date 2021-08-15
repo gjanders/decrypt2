@@ -93,6 +93,18 @@ Outputs the current state as UTF-8 to the field name.
 `substr(offset, count)`
 Returns a substring of the input, starting at the index offset with the number of characters count.
 
+`decode(codec)`
+Returns a decoded version of the input based on the codec, python codec list is available on https://docs.python.org/3/library/codecs.html#standard-encodings
+
+`escape`
+Returns a string with \ escaped by \\
+
+`unescape`
+Returns a string run through python unicode_escape (i.e return the unicode point(s))
+
+`tr('from', 'to')`
+Takes an argument to translate "from" and an argument of characters to translate "to" and then returns a result with the result (similar to tr in Unix), note you must use single quotes around the strings
+
 # Function Arguments
 ## Strings
 Strings can be specified by encapsulating values in apostrophes (single quote). Strings accept Pythonic escape sequences, so hexadecimal and octal values can be specified with \xhh and \ooo respectively.
@@ -162,6 +174,12 @@ Shannon Davis (Splunk)
 
 # Release Notes
 ## 2.3.4
+New functionality based on pull requests by Steven (malvidin) on github
+
+`decode`
+`escape`
+`unescape`
+`tr`
 
 ## 2.3.3
 - Minor update to license file
