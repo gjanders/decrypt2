@@ -90,8 +90,11 @@ def FN_escape(data, args):
 @numargs(0)
 def FN_unescape(data, args):
     data = data if isinstance(data, bytes) else data.encode("latin1", errors="ignore")
-    data = data.decode("unicode_escape", errors="ignore").encode("latin1")
-    return data
+    data = data.decode("unicode_escape", errors="ignore")
+    try:
+        return data.encode("latin1")
+    except UnicodeEncodeError:
+        return data
 
 @numargs(0)
 def FN_hex(data, args):
