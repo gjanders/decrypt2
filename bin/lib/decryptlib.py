@@ -76,12 +76,21 @@ def FN_decode(data, args):
 def FN_escape(data, args):
     data = data if isinstance(data, bytes) else data.encode("utf8", errors="ignore")
     data = "".join(data.replace(b"\\", b"\\\\").decode("ascii", errors="backslashreplace"))
-    return data
+    tr = {0x00: u'\\x00', 0x01: u'\\x01', 0x02: u'\\x02', 0x03: u'\\x03',
+          0x04: u'\\x04', 0x05: u'\\x05', 0x06: u'\\x06', 0x07: u'\\x07',
+          0x08: u'\\x08', 0x09: u'\\x09', 0x0a: u'\\x0a', 0x0b: u'\\x0b', 
+          0x0c: u'\\x0c', 0x0d: u'\\x0d', 0x0e: u'\\x0e', 0x0f: u'\\x0f', 
+          0x10: u'\\x10', 0x11: u'\\x11', 0x12: u'\\x12', 0x13: u'\\x13', 
+          0x14: u'\\x14', 0x15: u'\\x15', 0x16: u'\\x16', 0x17: u'\\x17', 
+          0x18: u'\\x18', 0x19: u'\\x19', 0x1a: u'\\x1a', 0x1b: u'\\x1b',
+          0x1c: u'\\x1c', 0x1d: u'\\x1d', 0x1e: u'\\x1e', 0x1f: u'\\x1f',
+          0x7f: u'\\x7f'}
+    return data.translate(tr)
 
 @numargs(0)
 def FN_unescape(data, args):
     data = data if isinstance(data, bytes) else data.encode("latin1", errors="ignore")
-    data = data.decode("unicode_escape").encode("latin1")
+    data = data.decode("unicode_escape", errors="ignore").encode("latin1")
     return data
 
 @numargs(0)
