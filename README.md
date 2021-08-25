@@ -97,10 +97,10 @@ Returns a substring of the input, starting at the index offset with the number o
 Returns a decoded version of the input based on the codec, python codec list is available on https://docs.python.org/3/library/codecs.html#standard-encodings , please use single quotes around the codec
 
 `escape`
-Returns a string with \ escaped by \\
+Returns a string where control characters, \, and non-ASCII characters are backslash escaped (e.g. `\x0a`, `\\`, `\x80`).
 
 `unescape`
-Returns a string run through python unicode_escape (i.e return the unicode point(s))
+Returns a string run through python unicode_escape (i.e. return the unicode point(s)). Reverses `escape`. Also unescapes Unicode codepoints (`\uxxxx` or `\Uxxxxxxxx`), which `escape` does not produce.
 
 `tr('from', 'to')`
 Takes an argument to translate "from" and an argument of characters to translate "to" and then returns a result with the result (similar to tr in Unix), note you must use single quotes around the strings
