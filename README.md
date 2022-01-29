@@ -183,9 +183,12 @@ New lines can be used to break up command sequences for easier readability.
       `...`
 # Contributors
 Shannon Davis (Splunk)
+Steven (malvidin on github)
 
 # Release Notes
 ## 2.3.5
+Merged pull request from Steven (malvidin on github)
+
 - Escape ASCII control characters 
 - New functionality based on pull requests by Steven (malvidin) on GitHub
 
