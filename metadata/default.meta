@@ -1,5 +1,6 @@
 []
 access = read : [ * ], write : [ admin, power ]
+export = system
 
 [commands]
 export = system
