@@ -102,6 +102,12 @@ Returns a string with \ escaped by \\
 `unescape`
 Returns a string run through python unicode_escape (i.e return the unicode point(s))
 
+`htmlescape`
+Returns a string with `&`, `<`, and `>` XML escaped like `&amp;`.
+
+`htmlunescape`
+Returns a string with HTML references like `&gt;` and `&#62;` unescaped to `>`.
+
 `tr('from', 'to')`
 Takes an argument to translate "from" and an argument of characters to translate "to" and then returns a result with the result (similar to tr in Unix), note you must use single quotes around the strings
 
