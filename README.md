@@ -1,17 +1,18 @@
-                                                                                           
-                    .___                                  __   
-                  __| _/____   ___________ ___.__._______/  |_ 
-                 / __ |/ __ \_/ ___\_  __ <   |  |\____ \   __\
-                / /_/ \  ___/\  \___|  | \/\___  ||  |_> >  |  
-                \____ |\___  >\___  >__|   / ____||   __/|__|  
-                     \/    \/     \/       \/     |__|v2.3.2
+                                                                               
+                    .___                                  __                   
+                  __| _/____   ___________ ___.__._______/  |_                 
+                 / __ |/ __ \_/ ___\_  __ <   |  |\____ \   __\                
+                / /_/ \  ___/\  \___|  | \/\___  ||  |_> >  |                  
+                \____ |\___  >\___  >__|   / ____||   __/|__|                  
+                     \/    \/     \/       \/     |__|v2.3.5                   
+                                                                               
+                        Original author: Michael Zalewski <mjz@hexize.com>     
+                        New maintainer: Gareth Anderson                        
+                                                                               
 
-                        Original author: Michael Zalewski <mjz@hexize.com>
-                        New maintainer: Gareth Anderson
-
-   DECRYPT is a set of Splunk commands which provide encryption and
-   decryption routines commonly used in malware communication and data                   
-   exfiltration.
+DECRYPT is a set of Splunk commands which provide encryption and
+decryption routines commonly used in malware communication and data
+exfiltration.
 
 # Installation
 DECRYPT is a standard Splunk App and requires no special configuration.
@@ -24,8 +25,10 @@ DECRYPT is implemented as a single search command which exposes a number of data
 The following example will transform the sourcetype field into its hex representation:
 
 `... | decrypt field=sourcetype hex() emit('sourcetype')`
-Note: Fields must be output via the emit function. The input field is not modified in place.
-If the emit function is not mentioned, an emit('decrypted') is automatically added so the data is output
+
+If the emit function is not mentioned, an `emit('decrypted')` is automatically added so the data is output
+
+_Note: Fields must be output via the emit function. The input field is not modified in place._
 
 # Arguments
 ## field
@@ -34,7 +37,7 @@ The field argument specifies the Splunk field to use as input.
 `... | decrypt field="hostname" ...`
 If no field argument is passed then _raw will be used by default.
 
-If a field argument is passed and the field does not exist in the current record being processed, no error or warning will be given.
+_Note: If a field argument is passed and the field does not exist in the current record being processed, no error or warning will be given._
 
 # FUNCTIONS
 Each function passed as an argument will be executed in order, with the output of the previous function provided as input to the next.
@@ -42,10 +45,10 @@ Each function passed as an argument will be executed in order, with the output o
 `... | decrypt field=hostname b64 xor('s\x65cr\x65t') hex emit('decrypted')`
 The above example can be explained as:
 
-Pass the value of the hostname field to b64 as input
-Pass the output of b64 to xor as input with the argument 's\x65cr\x65t'
-Pass the output of xor to hex as input
-Pass the output of hex to emit with the argument 'decrypted'
+- Pass the value of the `hostname` field to `b64` as input
+- Pass the output of `b64` to `xor` as input with the argument `'s\x65cr\x65t'`
+- Pass the output of `xor` to `hex` as input
+- Pass the output of `hex` to `emit` with the argument `'decrypted'`, creating a `decrypted` field
 
 ## Functions
 `btoa()`
@@ -69,7 +72,7 @@ Implements rotate-on-right to each character within the string using an 8 bit bo
 `xor(key)`
 Implements basic XOR cipher against the field with the supplied key. The key can be provided as a string or integer.
 
-`rc4(key)`
+`rc4('key')`
 Implements the RC4 cipher against the field with the supplied key. The key provided must be a string.
 
 `hex()`
@@ -78,23 +81,23 @@ Transforms input into its hexadecimal representation.
 `unhex()`
 Transforms hexadecimal input into its byte form.
 
-`save(name)`
+`save('name')`
 Saves the current state to memory as name.
 
-`load(name)`
+`load('name')`
 Recalls the previously saved state name from memory.
 
 `ascii()`
 Transforms input into ASCII output. Non-printable characters will be replaced with a period.
 
-`emit(name)`
+`emit('name')`
 Outputs the current state as UTF-8 to the field name.
 
 `substr(offset, count)`
 Returns a substring of the input, starting at the index offset with the number of characters count.
 
 `decode('codec')`
-Returns a decoded version of the input based on the codec, python codec list is available on https://docs.python.org/3/library/codecs.html#standard-encodings , please use single quotes around the codec
+Returns a decoded version of the input based on the codec, python codec list is available on https://docs.python.org/3/library/codecs.html#standard-encodings
 
 `escape`
 Returns a string where control characters, \, and non-ASCII characters are backslash escaped (e.g. `\x0a`, `\\`, `\x80`).
@@ -109,7 +112,9 @@ Returns a string with `&`, `<`, and `>` XML escaped like `&amp;`.
 Returns a string with HTML references like `&gt;` and `&#62;` unescaped to `>`.
 
 `tr('from', 'to')`
-Takes an argument to translate "from" and an argument of characters to translate "to" and then returns a result with the result (similar to tr in Unix), note you must use single quotes around the strings
+Takes an argument to translate "from" and an argument of characters to translate "to" and then returns a result with the result (similar to `tr` in Unix).
+
+_Note: you must use **single quotes** around the strings._
 
 # Function Arguments
 ## Strings
@@ -141,6 +146,7 @@ Functions which take no arguments do not need parenthesis in order for syntax ch
 `... | decrypt field=_raw b64 hex unhex`
 `... | decrypt field=_raw b64() hex() unhex()`
 `... | decrypt field=_raw b64() hex unhex`
+
 New lines can be used to break up command sequences for easier readability.
 
 `... | decrypt field=_raw`
@@ -179,8 +185,17 @@ New lines can be used to break up command sequences for easier readability.
 Shannon Davis (Splunk)
 
 # Release Notes
+## 2.3.5
+- Escape ASCII control characters 
+- New functionality based on pull requests by Steven (malvidin) on GitHub
+
+`htmlescape`
+`htmlunescape`
+
+_Note: `htmlescape` is not implemented for Python 2_
+
 ## 2.3.4
-New functionality based on pull requests by Steven (malvidin) on github
+- New functionality based on pull requests by Steven (malvidin) on GitHub
 
 `decode`
 `escape`
@@ -190,7 +205,7 @@ New functionality based on pull requests by Steven (malvidin) on github
 ## 2.3.3
 - Minor update to license file
 - The field `.decrypt_failure__` is not only output when there is an error (previously always output)
-- If the emit function is ommitted, the output now defaults to 'decrypted' as the field name
+- If the emit function is omitted, the output now defaults to 'decrypted' as the field name
 
 ## 2.3.2
 Fork of version 2.3.1 of DECRYPT app from SplunkBase (under MIT license)
