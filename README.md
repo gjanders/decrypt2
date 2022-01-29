@@ -194,6 +194,9 @@ Shannon Davis (Splunk)
 
 _Note: `htmlescape` is not implemented for Python 2_
 
+Updated Splunk python SDK to 1.6.18 
+
+
 ## 2.3.4
 - New functionality based on pull requests by Steven (malvidin) on GitHub
 
