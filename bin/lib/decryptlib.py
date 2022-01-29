@@ -1,8 +1,3 @@
-try:
-    import StringIO
-except:
-    import io as StringIO
-
 import tokenize
 import base64
 import binascii
@@ -14,6 +9,16 @@ g_record = None
 g_register = {}
 
 PY2 = sys.version_info[0] == 2
+
+if PY2:
+    import StringIO
+    from HTMLParser import HTMLParser
+    html_unescape = HTMLParser().unescape
+    def html_escape(s): raise Exception("Not implemented for Python 2")
+else:
+    import io as StringIO
+    from html import escape as html_escape, unescape as html_unescape
+
 
 class Tokenizer(object):
     def __init__(self, data):
@@ -83,6 +88,16 @@ def FN_unescape(data, args):
     data = data if isinstance(data, bytes) else data.encode("latin1", errors="ignore")
     data = data.decode("unicode_escape").encode("latin1")
     return data
+
+@numargs(0)
+def FN_htmlescape(data, args):
+    data = data.decode("utf-8", "ignore") if type(data) == bytes else data
+    return html_escape(data)
+
+@numargs(0)
+def FN_htmlunescape(data, args):
+    data = data.decode("utf-8", "ignore") if type(data) == bytes else data
+    return html_unescape(data)
 
 @numargs(0)
 def FN_hex(data, args):
@@ -375,6 +390,12 @@ def parsestmt(s):
 
         elif cmd == "unescape":
             yield FN_unescape, getargs(g)
+
+        elif cmd == "htmlescape":
+            yield FN_htmlescape, getargs(g)
+
+        elif cmd == "htmlunescape":
+            yield FN_htmlunescape, getargs(g)
 
         elif cmd == "tr":
             yield FN_tr, getargs(g)
