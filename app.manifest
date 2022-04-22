@@ -5,12 +5,12 @@
     "id": {
       "group": null,
       "name": "decrypt2",
-      "version": "2.3.4"
+      "version": "2.3.6"
     },
     "author": [
       {
         "name": "Gareth Anderson",
-        "email": null,
+        "email": "gareth.anderson03@gmail.com",
         "company": null
       }
     ],
