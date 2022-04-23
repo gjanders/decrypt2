@@ -206,6 +206,10 @@ def FN_substr(data, args):
     else:
         raise Exception("substr(): ranges must be integers")
 
+@numargs(0)
+def FN_rev(data, args):
+    return data[::-1]
+
 @numargs(1)
 def FN_xor(data, args):
     key, = args
@@ -371,6 +375,9 @@ def parsestmt(s):
 
         elif cmd == "substr":
             yield FN_substr, getargs(g)
+
+        elif cmd == "rev":
+            yield FN_rev, getargs(g)
 
         elif cmd == "b32":
             yield FN_b32, getargs(g)
