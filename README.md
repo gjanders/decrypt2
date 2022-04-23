@@ -4,7 +4,7 @@
                  / __ |/ __ \_/ ___\_  __ <   |  |\____ \   __\                
                 / /_/ \  ___/\  \___|  | \/\___  ||  |_> >  |                  
                 \____ |\___  >\___  >__|   / ____||   __/|__|                  
-                     \/    \/     \/       \/     |__|v2.3.5                   
+                     \/    \/     \/       \/     |__|v2.3.7                   
                                                                                
                         Original author: Michael Zalewski <mjz@hexize.com>     
                         New maintainer: Gareth Anderson                        
@@ -181,11 +181,25 @@ New lines can be used to break up command sequences for easier readability.
       `load('data') xor(0x02) emit('xor0x02')`
       `load('data') xor(0x03) emit('xor0x03')`
       `...`
+## Reverse the data field
+`... | decrypt field=data rev`
+
 # Contributors
 Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.3.7
+Merged pull request from Steven (malvidin on github)
+
+- New rev function
+- Decreased differences with python2
+
+Updated Splunk python SDK to 1.6.19
+
+## 2.3.6
+Updated metdata file to include `sc_admin` role for Splunk Cloud
+
 ## 2.3.5
 Merged pull request from Steven (malvidin on github)
 
