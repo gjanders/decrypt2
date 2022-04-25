@@ -1,11 +1,11 @@
 import tokenize
 import base64
 import binascii
-import re
+import itertools
 import string
 import sys
 
-g_record = None
+g_record = None  # dict record set by calling function
 g_register = {}
 
 PY2 = sys.version_info[0] == 2
@@ -143,24 +143,21 @@ def FN_rotx(data, args):
 def FN_ror(data, args):
     count, = args
     fn = lambda c, shift: (c >> shift % 8) & (2**8 - 1) | ((c & (2**8 - 1)) << (8 - (shift % 8))) & 0xff
-    res = []
+    res = bytearray()
     data = [ord(c) for c in data] if type(data) == str else data
     for c in data:
         res.append(fn(c, count))
-    if PY2:
-        return ''.join([chr(c) for c in res])
     return bytes(res)
 
 @numargs(1)
 def FN_rol(data, args):
     count, = args
     fn = lambda c, shift: (c << shift % 8) & (2**8 - 1) | ((c & (2**8 - 1)) >> (8 - (shift % 8)))
-    res = []
+    res = bytearray()
     data = [ord(c) for c in data] if type(data) == str else data
     for c in data:
         res.append(fn(c, count))
-    if PY2:
-        return ''.join([chr(c) for c in res])
+
     return bytes(res)
 
 @numargs(0)
@@ -209,29 +206,23 @@ def FN_substr(data, args):
     else:
         raise Exception("substr(): ranges must be integers")
 
+@numargs(0)
+def FN_rev(data, args):
+    return data[::-1]
+
 @numargs(1)
 def FN_xor(data, args):
     key, = args
-    if PY2:
-        if type(key) == unicode:
-            key = str(key)
+    if PY2 and isinstance(key, unicode):
+        key = str(key)
 
-    if type(key) != int:
-        if len(key) < len(data):
-            key = key * (int(len(data) / len(key)) + 1)
-        key = key[:len(data)]
-        key = [ord(c) for c in key] if type(key) == str else key
-        #fn = lambda a, b: ''.join([chr(ord(d) ^ ord(k)) for d, k in zip(a, b)])
-    else:
-        key = [key] * len(data)
-        #fn = lambda a, b: ''.join([chr((ord(d) ^ k) & 0xff) for d, k in zip(a, b)])
+    key = [key] if isinstance(key, int) else [ord(c) for c in key]
+    for key_int in key:
+        if key_int > 255:
+            raise Exception("xor(): does not accept integers greater than 255 or unicode as a key")
 
     data = [ord(c) for c in data] if type(data) == str else data
-    res = [((d ^ k) & 0xff) for d, k in zip(data, key)]
-
-    if PY2:
-        return ''.join([chr(c) for c in res])
-
+    res = bytearray((((d ^ k) & 0xff) for d, k in zip(data, itertools.cycle(key))))
     return bytes(res)
 
 @numargs(1)
@@ -240,7 +231,7 @@ def FN_rc4(data, args):
 
     data = [ord(c) for c in data] if type(data) == str else data
 
-    if type(key) == int:
+    if isinstance(key, int):
         raise Exception("rc4(): does not accept an integer as a key")
 
     S = list(range(256))
@@ -248,19 +239,16 @@ def FN_rc4(data, args):
 
     for i in range(256):
         j = (j + S[i] + ord(key[i % len(key)])) % 256
-        S[i] , S[j] = S[j] , S[i]
+        S[i], S[j] = S[j], S[i]
 
     i = j = 0
-    res = []
+    res = bytearray()
 
     for c in data:
         i = (i + 1) % 256
         j = (j + S[i]) % 256
-        S[i] , S[j] = S[j] , S[i]
+        S[i], S[j] = S[j], S[i]
         res.append(c ^ S[(S[i] + S[j]) % 256])
-
-    if PY2:
-        return ''.join([chr(c) for c in res])
 
     return bytes(res)
 
@@ -344,12 +332,12 @@ def parsestmt(s):
         if toknum in [tokenize.ENDMARKER, tokenize.NEWLINE]:
             break
 
-        if toknum == tokenize.NAME and cmd == None:
+        if toknum == tokenize.NAME and cmd is None:
             cmd = tokval
         else:
             raise Exception("syntax error")
 
-        if cmd in ["atob","b64"]:
+        if cmd in ("atob", "b64"):
             yield FN_atob, getargs(g)
 
         elif cmd == "btoa":
@@ -387,6 +375,9 @@ def parsestmt(s):
 
         elif cmd == "substr":
             yield FN_substr, getargs(g)
+
+        elif cmd == "rev":
+            yield FN_rev, getargs(g)
 
         elif cmd == "b32":
             yield FN_b32, getargs(g)

@@ -5,7 +5,7 @@
     "id": {
       "group": null,
       "name": "decrypt2",
-      "version": "2.3.6"
+      "version": "2.3.7"
     },
     "author": [
       {
@@ -15,7 +15,7 @@
       }
     ],
     "releaseDate": null,
-    "description": "DECRYPT is a set of Splunk commands which provide encryption and decryption routines commonly used in malware communication and data exfiltration (based on the work of Michael Zalewski)",
+    "description": "DECRYPT2 is a set of Splunk commands (decrypt command) which provide encryption and decryption routines commonly used in malware communication and data exfiltration (based on the work of Michael Zalewski)",
     "classification": {
       "intendedAudience": null,
       "categories": [],
