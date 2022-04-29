@@ -282,6 +282,38 @@ def FN_find(data, args):
         data = data if isinstance(data, str) else data.decode('utf8', errors='ignore')
         return data.find(sub, start)
 
+@numargs(0)
+def FN_b32re(data, args):
+    data = data.encode() if type(data) == str else data
+    return _reverse_endian_decode(data, 5)
+
+@numargs(0)
+def FN_b64re(data, args):
+    data = data.encode() if type(data) == str else data
+    return _reverse_endian_decode(data, 6)
+
+def _reverse_endian_decode(data, bit_width):
+    # Reverse endian decoding like SunBurst DGA
+    base_dict = {5: {k: i for i, k in enumerate(b'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567')},
+                 6: {k: i for i, k in enumerate(b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')}}
+    decode_dict = base_dict[bit_width]
+    bit_stack = 0
+    bits_on_stack = 0
+    ret_bytes = bytearray()
+    for char in data:
+        if char not in decode_dict:
+            continue
+        bit_stack |= decode_dict[char] << bits_on_stack
+        bits_on_stack += bit_width
+        if bits_on_stack >= 8:
+            ret_bytes.append(bit_stack & 0xFF)
+            bit_stack >>= 8
+            bits_on_stack -= 8
+    if bits_on_stack > 0:
+        bit_stack <<= 8 - bits_on_stack
+        ret_bytes.append(bit_stack & 0xFF)
+    return bytes(ret_bytes)
+
 def getargs(g):
     global g_record
     global g_register
@@ -418,6 +450,12 @@ def parsestmt(s):
 
         elif cmd == "find":
             yield FN_find, getargs(g)
+
+        elif cmd == "b32re":
+            yield FN_b32re, getargs(g)
+
+        elif cmd == "b64re":
+            yield FN_b64re, getargs(g)
 
         else:
             raise Exception("'%s' is not a recognized command" % cmd)
