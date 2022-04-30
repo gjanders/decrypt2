@@ -4,7 +4,7 @@
                  / __ |/ __ \_/ ___\_  __ <   |  |\____ \   __\                
                 / /_/ \  ___/\  \___|  | \/\___  ||  |_> >  |                  
                 \____ |\___  >\___  >__|   / ____||   __/|__|                  
-                     \/    \/     \/       \/     |__|v2.3.7                   
+                     \/    \/     \/       \/     |__|v2.3.8                   
                                                                                
                         Original author: Michael Zalewski <mjz@hexize.com>     
                         New maintainer: Gareth Anderson                        
@@ -114,6 +114,18 @@ Returns a string with HTML references like `&gt;` and `&#62;` unescaped to `>`.
 `tr('from', 'to')`
 Takes an argument to translate "from" and an argument of characters to translate "to" and then returns a result with the result (similar to `tr` in Unix).
 
+`rev()`
+Returns the input in reverse order.
+
+`find('subseq', start)`
+Returns the index of a subsequence "subseq" starting at index "start", or `-1` if the subsequence is not found.
+
+`b32re()`
+Returns a reverse-endian base32 decoded string, as used in the SunBurst DGA.  
+
+`b64re()`
+Returns a reverse-endian base64 decoded string.
+
 _Note: you must use **single quotes** around the strings._
 
 # Function Arguments
@@ -184,11 +196,23 @@ New lines can be used to break up command sequences for easier readability.
 ## Reverse the data field
 `... | decrypt field=data rev`
 
+## Find the index of a subsequence in a data field
+`... | decrypt field=data find('subseq', 0)`
+
+## Decrypt SunBurst DGA with reverse endian base32
+`... | decrypt field=data tr('ph2eifo3n5utg1j8d94qrvbmk0sal76c', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567') b32re`
+
 # Contributors
 Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.3.8
+Merged pull request from Steven (malvidin on github)
+
+- New find function
+- New b32re, and b64re functions that use the reverse endian decoding used by the SunBurst DGA
+
 ## 2.3.7
 Merged pull request from Steven (malvidin on github)
 

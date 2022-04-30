@@ -168,9 +168,8 @@ def FN_btoa(data, args):
 
 @numargs(0)
 def FN_atob(data, args):
-    padding = "=" * (4 - (len(data) % 4)) if len(data) % 4 != 0 else ""
     data = data.encode() if type(data) == str else data
-    return base64.b64decode(data + padding.encode())
+    return base64.b64decode(data + '===='.encode())  # b64decode ignores extra padding
 
 @numargs(0)
 def FN_b32(data, args):
@@ -197,11 +196,11 @@ def FN_load(data, args):
 def FN_substr(data, args):
     start, count = args
     if type(start) == int and type(count) == int:
+        if start <= 0:
+            start = max(len(data) + start, 0)
         end = start + count
         if start > len(data):
             raise Exception("substr(): start offset exceeds length of data")
-        if end > len(data):
-            end = len(data) - start + 1
         return data[start:end]
     else:
         raise Exception("substr(): ranges must be integers")
@@ -268,6 +267,52 @@ def FN_tr(data, args):
             trans_to = trans_to.decode('utf8') if isinstance(trans_to, bytes) else trans_to
             trans_chars = str.maketrans(trans_from, trans_to)
     return data.translate(trans_chars)
+
+@numargs(2)
+def FN_find(data, args):
+    sub, start = args
+    if not isinstance(start, int):
+        raise Exception('find(): start must be integer')
+    if isinstance(sub, int) and sub not in range(256):
+        raise Exception('find(): subsequence must be integer between 0 and 255')
+    if isinstance(sub, (int, bytes)):
+        data = data if isinstance(data, bytes) else data.encode('utf8', errors='ignore')
+        return data.find(sub, start)
+    else:
+        data = data if isinstance(data, str) else data.decode('utf8', errors='ignore')
+        return data.find(sub, start)
+
+@numargs(0)
+def FN_b32re(data, args):
+    data = data.encode() if type(data) == str else data
+    return _reverse_endian_decode(data, 5)
+
+@numargs(0)
+def FN_b64re(data, args):
+    data = data.encode() if type(data) == str else data
+    return _reverse_endian_decode(data, 6)
+
+def _reverse_endian_decode(data, bit_width):
+    # Reverse endian decoding like SunBurst DGA
+    base_dict = {5: {k: i for i, k in enumerate(b'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567')},
+                 6: {k: i for i, k in enumerate(b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')}}
+    decode_dict = base_dict[bit_width]
+    bit_stack = 0
+    bits_on_stack = 0
+    ret_bytes = bytearray()
+    for char in data:
+        if char not in decode_dict:
+            continue
+        bit_stack |= decode_dict[char] << bits_on_stack
+        bits_on_stack += bit_width
+        if bits_on_stack >= 8:
+            ret_bytes.append(bit_stack & 0xFF)
+            bit_stack >>= 8
+            bits_on_stack -= 8
+    if bits_on_stack > 0:
+        bit_stack <<= 8 - bits_on_stack
+        ret_bytes.append(bit_stack & 0xFF)
+    return bytes(ret_bytes)
 
 def getargs(g):
     global g_record
@@ -402,6 +447,15 @@ def parsestmt(s):
 
         elif cmd == "tr":
             yield FN_tr, getargs(g)
+
+        elif cmd == "find":
+            yield FN_find, getargs(g)
+
+        elif cmd == "b32re":
+            yield FN_b32re, getargs(g)
+
+        elif cmd == "b64re":
+            yield FN_b64re, getargs(g)
 
         else:
             raise Exception("'%s' is not a recognized command" % cmd)
