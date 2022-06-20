@@ -207,6 +207,12 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.3.10
+Merged pull request from Steven (malvidin on github)
+
+When Splunk sends a CSV that contains null bytes to Python 3.7, the CSV Reader error is not helpful
+This update provides a warning to advise of the null character in the data (sed/rex/eval/replace can be used to remove the NUL character)
+
 ## 2.3.9
 Updated Splunk python SDK to 1.6.20
 
