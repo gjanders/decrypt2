@@ -41,7 +41,7 @@ class DecryptCommand(StreamingCommand):
                 yield record
         except csv.Error:
             raise csv.Error('Splunk record contained NUL. '
-                            'Use eval/replace or sed beforehand to work around, '
+                            'Use eval/replace or rex/sed beforehand to work around, '
                             'or use the decrypt/escape function in the previous command.'
                             ' (fixed in Python 3.11)')
 
