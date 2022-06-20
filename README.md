@@ -207,6 +207,9 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.3.9
+Updated Splunk python SDK to 1.6.20
+
 ## 2.3.8
 Merged pull request from Steven (malvidin on github)
 
