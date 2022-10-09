@@ -314,6 +314,37 @@ def _reverse_endian_decode(data, bit_width):
         ret_bytes.append(bit_stack & 0xFF)
     return bytes(ret_bytes)
 
+@numargs(0)
+def FN_b58(data, args):
+    data = data.encode() if type(data) == str else data
+    return _base58_decode(data)
+
+def _base58_decode(data):
+    b58_alpha = bytearray(b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
+    data_clean = bytearray([b for b in data if b in b58_alpha])
+    data_len = len(data_clean)
+    if data_len > 2**15:
+        raise Exception("base58 error: Input data length over soft limit of 32kB")
+    for leading_null_count, clean_val in enumerate(data_clean):
+        if clean_val != b58_alpha[0]:
+            break
+    return_int = 0
+    max_slice_len = 16
+    b58_factors = [58**x for x in range(max_slice_len+1)]
+    b58_dict = {v: i for i, v in enumerate(b58_alpha)}
+    while data_clean:
+        slice_len = min(len(data_clean), max_slice_len)
+        slice_total = 0
+        for val in data_clean[:slice_len]:
+            slice_total = 58 * slice_total + b58_dict[val]
+        return_int = return_int * b58_factors[slice_len] + slice_total
+        data_clean = data_clean[slice_len:]
+    output_len = int(data_len * 0.7322476243909465)
+    try:
+        return (b"\x00" * leading_null_count) + return_int.to_bytes(1 + output_len, "big").lstrip(b"\x00")
+    except AttributeError:
+        return (b"\x00" * leading_null_count) + ('%%0%dx' % (output_len << 1) % return_int).decode('hex')[-output_len:].lstrip(b"\x00")
+
 def getargs(g):
     global g_record
     global g_register
@@ -456,6 +487,9 @@ def parsestmt(s):
 
         elif cmd == "b64re":
             yield FN_b64re, getargs(g)
+
+        elif cmd == "b58":
+            yield FN_b58, getargs(g)
 
         else:
             raise Exception("'%s' is not a recognized command" % cmd)
