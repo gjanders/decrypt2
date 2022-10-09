@@ -60,6 +60,9 @@ Decodes a Base64 encoded string.
 `b32()`
 Decodes a Base32 encoded string.
 
+`b58()`
+Decodes a Base58 encoded string.
+
 `rotx(count)`
 Implements Caesarian shift. The count argument specifies the amount to shift and must be an integer.
 
@@ -207,6 +210,13 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.3.11
+Merged pull request from Steven (malvidin on github)
+
+This new version includes:
+- New base58 decode function (b58)
+- Updated python SDK to 1.7.2
+
 ## 2.3.10
 Merged pull request from Steven (malvidin on github)
 
