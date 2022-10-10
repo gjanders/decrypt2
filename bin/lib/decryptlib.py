@@ -319,29 +319,30 @@ def FN_b58(data, args):
     data = data.encode() if type(data) == str else data
     return _base58_decode(data)
 
-def _base58_decode(data):
+def _base58_decode(data, slice_len=2**8, max_len=2**15):
     b58_alpha = bytearray(b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
     data_clean = bytearray([b for b in data if b in b58_alpha])
     data_len = len(data_clean)
-    if data_len > 2**15:
-        raise Exception("base58 error: Input data length over soft limit of 32kB")
+    if max_len and data_len > max_len:
+        raise Exception("base58 error: Input data length over soft limit of %s" % max_len)
+    leading_null_count = 0
     for leading_null_count, clean_val in enumerate(data_clean):
         if clean_val != b58_alpha[0]:
             break
     return_int = 0
-    max_slice_len = 16
-    b58_factors = [58**x for x in range(max_slice_len+1)]
+    b58_factors = [58**x for x in range(slice_len+1)]
     b58_dict = {v: i for i, v in enumerate(b58_alpha)}
     while data_clean:
-        slice_len = min(len(data_clean), max_slice_len)
         slice_total = 0
+        if len(data_clean) < slice_len:
+            slice_len = len(data_clean)
         for val in data_clean[:slice_len]:
             slice_total = 58 * slice_total + b58_dict[val]
         return_int = return_int * b58_factors[slice_len] + slice_total
         data_clean = data_clean[slice_len:]
     output_len = int(data_len * 0.7322476243909465)
     try:
-        return (b"\x00" * leading_null_count) + return_int.to_bytes(1 + output_len, "big").lstrip(b"\x00")
+        return (b"\x00" * leading_null_count) + return_int.to_bytes(output_len << 1, "big").lstrip(b"\x00")
     except AttributeError:
         return (b"\x00" * leading_null_count) + ('%%0%dx' % (output_len << 1) % return_int).decode('hex')[-output_len:].lstrip(b"\x00")
 
