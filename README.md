@@ -210,6 +210,13 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.3.12
+Merged pull request from Steven (malvidin on github)
+
+This new version includes:
+- A fix to base58 to deal with empty input
+- A setting for slice length and max length on base58
+
 ## 2.3.11
 Merged pull request from Steven (malvidin on github)
 
