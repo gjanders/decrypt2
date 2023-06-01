@@ -129,6 +129,9 @@ Returns a reverse-endian base32 decoded string, as used in the SunBurst DGA.
 `b64re()`
 Returns a reverse-endian base64 decoded string.
 
+`zlib_inflate()`
+Returns zlib.decompress() inflated bytes. The window size (wbits) must be provided.
+
 _Note: you must use **single quotes** around the strings._
 
 # Function Arguments

@@ -4,6 +4,7 @@ import binascii
 import itertools
 import string
 import sys
+import zlib
 
 g_record = None  # dict record set by calling function
 g_register = {}
@@ -346,6 +347,19 @@ def _base58_decode(data, slice_len=2**8, max_len=2**15):
     except AttributeError:
         return (b"\x00" * leading_null_count) + ('%%0%dx' % (output_len << 1) % return_int).decode('hex')[-output_len:].lstrip(b"\x00")
 
+@numargs(1)
+def FN_zlib_inflate(data, args):
+    wbits, = args
+    data = data.encode() if type(data) == str else data
+    if not isinstance(wbits, int):
+        raise Exception("zlib_inflate(): requires an integer as the wbits value")
+    try:
+        return zlib.decompress(data, wbits)
+    except zlib.error as exc:
+        if not any([wbits in range(-15, -7), wbits in range(8, 16), wbits in range(24, 32), wbits in range(40, 48)]):
+            raise Exception("zlib_inflate(): invalid wbits value provided")
+        raise Exception("zlib_inflate(): '%s'" % exc)
+
 def getargs(g):
     global g_record
     global g_register
@@ -491,6 +505,9 @@ def parsestmt(s):
 
         elif cmd == "b58":
             yield FN_b58, getargs(g)
+
+        elif cmd == "zlib_inflate":
+            yield FN_zlib_inflate, getargs(g)
 
         else:
             raise Exception("'%s' is not a recognized command" % cmd)
