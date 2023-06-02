@@ -1,14 +1,14 @@
-                                                                               
-                    .___                                  __                   
-                  __| _/____   ___________ ___.__._______/  |_                 
-                 / __ |/ __ \_/ ___\_  __ <   |  |\____ \   __\                
-                / /_/ \  ___/\  \___|  | \/\___  ||  |_> >  |                  
-                \____ |\___  >\___  >__|   / ____||   __/|__|                  
-                     \/    \/     \/       \/     |__|v2.3.8                   
-                                                                               
-                        Original author: Michael Zalewski <mjz@hexize.com>     
-                        New maintainer: Gareth Anderson                        
-                                                                               
+
+                    .___                                  __
+                  __| _/____   ___________ ___.__._______/  |_
+                 / __ |/ __ \_/ ___\_  __ <   |  |\____ \   __\
+                / /_/ \  ___/\  \___|  | \/\___  ||  |_> >  |
+                \____ |\___  >\___  >__|   / ____||   __/|__|
+                     \/    \/     \/       \/     |__|
+
+                        Original author: Michael Zalewski <mjz@hexize.com>
+                        New maintainer: Gareth Anderson
+
 
 DECRYPT is a set of Splunk commands which provide encryption and
 decryption routines commonly used in malware communication and data
@@ -124,7 +124,7 @@ Returns the input in reverse order.
 Returns the index of a subsequence "subseq" starting at index "start", or `-1` if the subsequence is not found.
 
 `b32re()`
-Returns a reverse-endian base32 decoded string, as used in the SunBurst DGA.  
+Returns a reverse-endian base32 decoded string, as used in the SunBurst DGA.
 
 `b64re()`
 Returns a reverse-endian base64 decoded string.
@@ -213,6 +213,13 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.3.13
+Merged pull request from Steven (malvidin on github)
+
+This new version includes:
+- Added zlib_inflate function
+- Updated Splunk python SDK to 1.7.3
+
 ## 2.3.12
 Merged pull request from Steven (malvidin on github)
 
@@ -256,7 +263,7 @@ Updated metdata file to include `sc_admin` role for Splunk Cloud
 ## 2.3.5
 Merged pull request from Steven (malvidin on github)
 
-- Escape ASCII control characters 
+- Escape ASCII control characters
 - New functionality based on pull requests by Steven (malvidin) on GitHub
 
 `htmlescape`
@@ -264,7 +271,7 @@ Merged pull request from Steven (malvidin on github)
 
 _Note: `htmlescape` is not implemented for Python 2_
 
-Updated Splunk python SDK to 1.6.18 
+Updated Splunk python SDK to 1.6.18
 
 
 ## 2.3.4
