@@ -218,7 +218,7 @@ def FN_xor(data, args):
 
     key = [key] if isinstance(key, int) else [ord(c) for c in key]
     for key_int in key:
-        if key_int > 255:
+        if key_int < 0 or key_int > 255:
             raise Exception("xor(): does not accept integers greater than 255 or unicode as a key")
 
     data = [ord(c) for c in data] if type(data) == str else data
@@ -358,7 +358,7 @@ def FN_zlib_inflate(data, args):
     except zlib.error as exc:
         if not any([wbits in range(-15, -7), wbits in range(8, 16), wbits in range(24, 32), wbits in range(40, 48)]):
             raise Exception("zlib_inflate(): invalid wbits value provided")
-        raise Exception("zlib_inflate(): '%s'" % exc)
+        raise Exception("zlib_inflate(): %s" % exc)
 
 def getargs(g):
     global g_record
@@ -366,6 +366,7 @@ def getargs(g):
 
     args = ()
     toknum, tokval, _, _, _ = g.next()
+    tokminus = False
 
     if toknum in [tokenize.NAME, tokenize.ENDMARKER]:
         g.prev()
@@ -386,7 +387,17 @@ def getargs(g):
         if tokval == ",":
             continue
 
-        if toknum == tokenize.STRING:
+        if tokval == "-":
+            tokminus = True
+            continue
+
+        if toknum == tokenize.NUMBER:
+            tokval = int(tokval, 0)
+            if tokminus:
+                tokval = - tokval
+        elif tokminus:
+            raise Exception("Cannot negate '%s' with '-' operator" % tokval)
+        elif toknum == tokenize.STRING:
             tokval = tokval[1:-1]
             tokval = tokval.encode("latin1").decode("unicode-escape")
             if PY2:
@@ -398,11 +409,10 @@ def getargs(g):
                 tokval = g_register[tokval]
             else:
                 raise Exception("the field and register '%s' does not exist" % tokval)
-        elif toknum == tokenize.NUMBER:
-            tokval = int(tokval, 0)
         else:
             raise Exception("syntax error")
 
+        tokminus = False
         args = args + (tokval,)
 
     return args
