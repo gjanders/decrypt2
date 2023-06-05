@@ -196,15 +196,22 @@ def FN_load(data, args):
 @numargs(2)
 def FN_substr(data, args):
     start, count = args
-    if type(start) == int and type(count) == int:
-        if start <= 0:
+    if isinstance(count, str) and count.lower() in ('null', 'none', 'undefined', ''):
+        count = None
+    if isinstance(start, int) and isinstance(count, int) or count is None:
+        if start < 0:
             start = max(len(data) + start, 0)
-        end = start + count
+        if count is None:
+            end = None
+        elif count < 0:
+            end = count
+        else:
+            end = start + count
         if start > len(data):
             raise Exception("substr(): start offset exceeds length of data")
         return data[start:end]
     else:
-        raise Exception("substr(): ranges must be integers")
+        raise Exception("substr(): offset must be integer, length must be integer or 'null'")
 
 @numargs(0)
 def FN_rev(data, args):
