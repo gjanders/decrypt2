@@ -1,29 +1,22 @@
-import tokenize
+#!/usr/bin/env python
+# coding=utf-8
+
 import base64
 import binascii
 import itertools
 import string
-import sys
+import tokenize
 import zlib
+from html import escape as html_escape, unescape as html_unescape
+from io import StringIO
 
-g_record = None  # dict record set by calling function
+g_record: dict = {}  # dict record set by calling function
 g_register = {}
-
-PY2 = sys.version_info[0] == 2
-
-if PY2:
-    import StringIO
-    from HTMLParser import HTMLParser
-    html_unescape = HTMLParser().unescape
-    def html_escape(s): raise Exception("Not implemented for Python 2")
-else:
-    import io as StringIO
-    from html import escape as html_escape, unescape as html_unescape
 
 
 class Tokenizer(object):
     def __init__(self, data):
-        self.chain = [t for t in tokenize.generate_tokens(StringIO.StringIO(data).readline)]
+        self.chain = [t for t in tokenize.generate_tokens(StringIO(data).readline)]
         self.index = 0
 
     def __iter__(self):
@@ -46,55 +39,102 @@ class Tokenizer(object):
             raise StopIteration
         return self.chain[self.index]
 
+
 def numargs(argcount):
     def numargs_decorator(func):
         def func_wrapper(data, args):
             if len(args) == argcount:
                 return func(data, args)
             else:
-                raise Exception('%s() takes exactly %d arguments, %d given' % (func.__name__[3:], argcount, len(args)))
+                func_name = func.__name__[3:]
+                raise Exception(f"{func_name}() takes exactly {argcount} arguments, {len(args)} given")
+
         return func_wrapper
+
     return numargs_decorator
 
+
+def coerce_to_int(input_parameter, calling_func, accept_null=True):
+    if accept_null and isinstance(input_parameter, str):
+        if input_parameter.lower() in ("null", "none", "undefined", ""):
+            return None
+
+    try:
+        return int(input_parameter)
+    except:
+        or_null_option = " or 'null'" if accept_null else ""
+        raise Exception(f"{calling_func}() parameter must be integer {or_null_option}")
+
+
 @numargs(0)
-def FN_ascii(data, args):
-    data = data.decode('ascii', 'replace') if type(data) == bytes else data
+def fn_ascii(data, args):
+    data = data.decode("ascii", "replace") if type(data) == bytes else data
     return "".join(c if c in string.printable[:-5] else "." for c in data)
 
+
 @numargs(1)
-def FN_emit(data, args):
+def fn_emit(data, args):
     global g_record
-    field, = args
+    (field,) = args
     emit = data.decode("utf-8", "replace") if type(data) == bytes else data
     g_record[field] = emit
     return data
 
+
 @numargs(1)
-def FN_decode(data, args):
-    codec, = args
+def fn_decode(data, args):
+    (codec,) = args
     try:
-        data = data.decode(codec, 'replace') if isinstance(data, bytes) else data
+        data = data.decode(codec, "replace") if isinstance(data, bytes) else data
     except LookupError:
-        raise Exception("the codec '%s' is not valid" % codec)
+        raise Exception(f"the codec '{codec}' is not valid")
     return data
 
-@numargs(0)
-def FN_escape(data, args):
-    data = data if isinstance(data, bytes) else data.encode("utf8", errors="ignore")
-    data = "".join(data.replace(b"\\", b"\\\\").decode("ascii", errors="backslashreplace"))
-    tr = {0x00: u'\\x00', 0x01: u'\\x01', 0x02: u'\\x02', 0x03: u'\\x03',
-          0x04: u'\\x04', 0x05: u'\\x05', 0x06: u'\\x06', 0x07: u'\\x07',
-          0x08: u'\\x08', 0x09: u'\\x09', 0x0a: u'\\x0a', 0x0b: u'\\x0b', 
-          0x0c: u'\\x0c', 0x0d: u'\\x0d', 0x0e: u'\\x0e', 0x0f: u'\\x0f', 
-          0x10: u'\\x10', 0x11: u'\\x11', 0x12: u'\\x12', 0x13: u'\\x13', 
-          0x14: u'\\x14', 0x15: u'\\x15', 0x16: u'\\x16', 0x17: u'\\x17', 
-          0x18: u'\\x18', 0x19: u'\\x19', 0x1a: u'\\x1a', 0x1b: u'\\x1b',
-          0x1c: u'\\x1c', 0x1d: u'\\x1d', 0x1e: u'\\x1e', 0x1f: u'\\x1f',
-          0x7f: u'\\x7f'}
-    return data.translate(tr)
 
 @numargs(0)
-def FN_unescape(data, args):
+def fn_escape(data, args):
+    data = data if isinstance(data, bytes) else data.encode("utf8", errors="ignore")
+    data = "".join(data.replace(b"\\", b"\\\\").decode("ascii", errors="backslashreplace"))
+    tr = {
+        0x00: "\\x00",
+        0x01: "\\x01",
+        0x02: "\\x02",
+        0x03: "\\x03",
+        0x04: "\\x04",
+        0x05: "\\x05",
+        0x06: "\\x06",
+        0x07: "\\x07",
+        0x08: "\\x08",
+        0x09: "\\x09",
+        0x0A: "\\x0a",
+        0x0B: "\\x0b",
+        0x0C: "\\x0c",
+        0x0D: "\\x0d",
+        0x0E: "\\x0e",
+        0x0F: "\\x0f",
+        0x10: "\\x10",
+        0x11: "\\x11",
+        0x12: "\\x12",
+        0x13: "\\x13",
+        0x14: "\\x14",
+        0x15: "\\x15",
+        0x16: "\\x16",
+        0x17: "\\x17",
+        0x18: "\\x18",
+        0x19: "\\x19",
+        0x1A: "\\x1a",
+        0x1B: "\\x1b",
+        0x1C: "\\x1c",
+        0x1D: "\\x1d",
+        0x1E: "\\x1e",
+        0x1F: "\\x1f",
+        0x7F: "\\x7f",
+    }
+    return data.translate(tr)
+
+
+@numargs(0)
+def fn_unescape(data, args):
     data = data if isinstance(data, bytes) else data.encode("latin1", errors="ignore")
     data = data.decode("unicode_escape", errors="ignore")
     try:
@@ -102,126 +142,149 @@ def FN_unescape(data, args):
     except UnicodeEncodeError:
         return data
 
+
 @numargs(0)
-def FN_htmlescape(data, args):
+def fn_htmlescape(data, args):
     data = data.decode("utf-8", "ignore") if type(data) == bytes else data
     return html_escape(data)
 
+
 @numargs(0)
-def FN_htmlunescape(data, args):
+def fn_htmlunescape(data, args):
     data = data.decode("utf-8", "ignore") if type(data) == bytes else data
     return html_unescape(data)
 
+
 @numargs(0)
-def FN_hex(data, args):
-    if PY2:
-        return binascii.hexlify(data)
+def fn_hex(data, args):
     return binascii.hexlify(data.encode() if type(data) == str else data).decode("ascii")
 
+
 @numargs(0)
-def FN_unhex(data, args):
+def fn_unhex(data, args):
     return binascii.unhexlify(data)
 
+
 @numargs(1)
-def FN_rotx(data, args):
-    count, = args
+def fn_rotx(data, args):
+    (count,) = args
+    count = coerce_to_int(count, "rotx", accept_null=False)
 
     if type(data) != str:
         raise Exception("rotx(): ROT only supports alphabetical characters A-Z")
 
-    left = 'abcdefghijklmnopqrstuvwxyz'
+    left = "abcdefghijklmnopqrstuvwxyz"
     right = left[count:] + left[:count]
+
     def translate(c):
         i = left.find(c)
         return c if i < 0 else right[i]
+
     res = []
     for c in data:
         c = translate(c.lower()).upper() if c.isupper() else translate(c)
         res.append(c)
-    return ''.join(res)
+    return "".join(res)
+
 
 @numargs(1)
-def FN_ror(data, args):
-    count, = args
-    fn = lambda c, shift: (c >> shift % 8) & (2**8 - 1) | ((c & (2**8 - 1)) << (8 - (shift % 8))) & 0xff
-    res = bytearray()
+def fn_ror(data, args):
+    (count,) = args
+    count = coerce_to_int(count, "ror", accept_null=False)
     data = [ord(c) for c in data] if type(data) == str else data
-    for c in data:
-        res.append(fn(c, count))
-    return bytes(res)
+    return bytes([_rotate_right(c, count) for c in data])
+
+
+def _rotate_right(c, shift):
+    return (c >> shift % 8) & (2**8 - 1) | ((c & (2**8 - 1)) << (8 - (shift % 8))) & 0xFF
+
 
 @numargs(1)
-def FN_rol(data, args):
-    count, = args
-    fn = lambda c, shift: (c << shift % 8) & (2**8 - 1) | ((c & (2**8 - 1)) >> (8 - (shift % 8)))
-    res = bytearray()
+def fn_rol(data, args):
+    (count,) = args
+    count = coerce_to_int(count, "rol", accept_null=False)
     data = [ord(c) for c in data] if type(data) == str else data
-    for c in data:
-        res.append(fn(c, count))
+    return bytes([_rotate_left(c, count) for c in data])
 
-    return bytes(res)
+
+def _rotate_left(c, shift):
+    return (c << shift % 8) & (2**8 - 1) | ((c & (2**8 - 1)) >> (8 - (shift % 8)))
+
 
 @numargs(0)
-def FN_btoa(data, args):
-    if PY2:
-        return base64.b64encode(data)
+def fn_btoa(data, args):
     return base64.b64encode(data.encode() if type(data) == str else data).decode("ascii")
 
-@numargs(0)
-def FN_atob(data, args):
-    data = data.encode() if type(data) == str else data
-    return base64.b64decode(data + '===='.encode())  # b64decode ignores extra padding
 
 @numargs(0)
-def FN_b32(data, args):
+def fn_atob(data, args):
+    data = data.encode() if type(data) == str else data
+    return base64.b64decode(data + "====".encode())  # b64decode ignores extra padding
+
+
+@numargs(0)
+def fn_b32(data, args):
     padding = "=" * (8 - (len(data) % 8)) if len(data) % 8 != 0 else ""
     data = data.encode() if type(data) == str else data
     return base64.b32decode(data + padding.encode())
 
+
 @numargs(1)
-def FN_save(data, args):
+def fn_save(data, args):
     global g_register
-    var, = args
+    (var,) = args
     g_register[var] = data
     return data
 
+
 @numargs(1)
-def FN_load(data, args):
+def fn_load(data, args):
     global g_register
-    var, = args
+    (var,) = args
     if var not in g_register:
-        raise Exception("load(): the variable '%s' could not be loaded" % var)
+        raise Exception(f"load(): the variable '{var}' could not be loaded")
     return g_register[var]
 
+
 @numargs(2)
-def FN_substr(data, args):
+def fn_substr(data, args):
     start, count = args
-    if isinstance(count, str) and count.lower() in ('null', 'none', 'undefined', ''):
-        count = None
-    if isinstance(start, int) and isinstance(count, int) or count is None:
-        if start < 0:
-            start = max(len(data) + start, 0)
-        if count is None:
-            end = None
-        elif count < 0:
-            end = count
-        else:
-            end = start + count
-        if start > len(data):
-            raise Exception("substr(): start offset exceeds length of data")
+    start = coerce_to_int(start, "substr", accept_null=False)
+    count = coerce_to_int(count, "substr", accept_null=True)
+    if start < 0:
+        start = max(len(data) + start, 0)
+    if count is None:
+        end = None
+    elif count < 0:
+        end = count
+    else:
+        end = start + count
+    if start > len(data):
+        raise Exception("substr(): start offset exceeds length of data")
+    return data[start:end]
+
+
+@numargs(2)
+def fn_slice(data, args):
+    start, end = args
+    start = coerce_to_int(start, "slice", accept_null=True)
+    end = coerce_to_int(end, "slice", accept_null=True)
+    if isinstance(end, str) and end.lower() in ("null", "none", "undefined", ""):
+        end = None
+    if isinstance(start, int) and isinstance(end, int) or end is None:
         return data[start:end]
     else:
-        raise Exception("substr(): offset must be integer, length must be integer or 'null'")
+        raise Exception("slice(): start and end must be integers or 'null'")
+
 
 @numargs(0)
-def FN_rev(data, args):
+def fn_rev(data, args):
     return data[::-1]
 
+
 @numargs(1)
-def FN_xor(data, args):
-    key, = args
-    if PY2 and isinstance(key, unicode):
-        key = str(key)
+def fn_xor(data, args):
+    (key,) = args
 
     key = [key] if isinstance(key, int) else [ord(c) for c in key]
     for key_int in key:
@@ -229,12 +292,13 @@ def FN_xor(data, args):
             raise Exception("xor(): does not accept integers greater than 255 or unicode as a key")
 
     data = [ord(c) for c in data] if type(data) == str else data
-    res = bytearray((((d ^ k) & 0xff) for d, k in zip(data, itertools.cycle(key))))
+    res = bytearray((((d ^ k) & 0xFF) for d, k in zip(data, itertools.cycle(key))))
     return bytes(res)
 
+
 @numargs(1)
-def FN_rc4(data, args):
-    key, = args
+def fn_rc4(data, args):
+    (key,) = args
 
     data = [ord(c) for c in data] if type(data) == str else data
 
@@ -259,51 +323,51 @@ def FN_rc4(data, args):
 
     return bytes(res)
 
+
 @numargs(2)
-def FN_tr(data, args):
+def fn_tr(data, args):
     trans_from, trans_to = args
-    if PY2:
-        data = data if isinstance(data, str) else data.encode('utf8')
-        trans_chars = string.maketrans(trans_from, trans_to)
+    if isinstance(data, bytes):
+        trans_from = trans_from if isinstance(trans_from, bytes) else trans_from.encode("utf8")
+        trans_to = trans_to if isinstance(trans_to, bytes) else trans_to.encode("utf8")
+        trans_chars = bytes.maketrans(trans_from, trans_to)
     else:
-        if isinstance(data, bytes):
-            trans_from = trans_from if isinstance(trans_from, bytes) else trans_from.encode('utf8')
-            trans_to = trans_to if isinstance(trans_to, bytes) else trans_to.encode('utf8')
-            trans_chars = bytes.maketrans(trans_from, trans_to)
-        else:
-            trans_from = trans_from.decode('utf8') if isinstance(trans_from, bytes) else trans_from
-            trans_to = trans_to.decode('utf8') if isinstance(trans_to, bytes) else trans_to
-            trans_chars = str.maketrans(trans_from, trans_to)
+        trans_from = trans_from.decode("utf8") if isinstance(trans_from, bytes) else trans_from
+        trans_to = trans_to.decode("utf8") if isinstance(trans_to, bytes) else trans_to
+        trans_chars = str.maketrans(trans_from, trans_to)
     return data.translate(trans_chars)
 
+
 @numargs(2)
-def FN_find(data, args):
+def fn_find(data, args):
     sub, start = args
-    if not isinstance(start, int):
-        raise Exception('find(): start must be integer')
-    if isinstance(sub, int) and sub not in range(256):
-        raise Exception('find(): subsequence must be integer between 0 and 255')
+    start = coerce_to_int(start, "find", accept_null=True)
     if isinstance(sub, (int, bytes)):
-        data = data if isinstance(data, bytes) else data.encode('utf8', errors='ignore')
+        data = data if isinstance(data, bytes) else data.encode("utf8", errors="ignore")
         return data.find(sub, start)
     else:
-        data = data if isinstance(data, str) else data.decode('utf8', errors='ignore')
+        data = data if isinstance(data, str) else data.decode("utf8", errors="ignore")
         return data.find(sub, start)
 
+
 @numargs(0)
-def FN_b32re(data, args):
+def fn_b32re(data, args):
     data = data.encode() if type(data) == str else data
     return _reverse_endian_decode(data, 5)
 
+
 @numargs(0)
-def FN_b64re(data, args):
+def fn_b64re(data, args):
     data = data.encode() if type(data) == str else data
     return _reverse_endian_decode(data, 6)
 
+
 def _reverse_endian_decode(data, bit_width):
     # Reverse endian decoding like SunBurst DGA
-    base_dict = {5: {k: i for i, k in enumerate(b'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567')},
-                 6: {k: i for i, k in enumerate(b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')}}
+    base_dict = {
+        5: {k: i for i, k in enumerate(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567")},
+        6: {k: i for i, k in enumerate(b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")},
+    }
     decode_dict = base_dict[bit_width]
     bit_stack = 0
     bits_on_stack = 0
@@ -322,23 +386,25 @@ def _reverse_endian_decode(data, bit_width):
         ret_bytes.append(bit_stack & 0xFF)
     return bytes(ret_bytes)
 
+
 @numargs(0)
-def FN_b58(data, args):
+def fn_b58(data, args):
     data = data.encode() if type(data) == str else data
     return _base58_decode(data)
+
 
 def _base58_decode(data, slice_len=2**8, max_len=2**15):
     b58_alpha = bytearray(b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
     data_clean = bytearray([b for b in data if b in b58_alpha])
     data_len = len(data_clean)
     if max_len and data_len > max_len:
-        raise Exception("base58 error: Input data length over soft limit of %s" % max_len)
+        raise Exception(f"base58 error: Input data length over soft limit of {max_len}")
     leading_null_count = 0
     for leading_null_count, clean_val in enumerate(data_clean):
         if clean_val != b58_alpha[0]:
             break
     return_int = 0
-    b58_factors = [58**x for x in range(slice_len+1)]
+    b58_factors = [58**x for x in range(slice_len + 1)]
     b58_dict = {v: i for i, v in enumerate(b58_alpha)}
     while data_clean:
         slice_total = 0
@@ -349,82 +415,83 @@ def _base58_decode(data, slice_len=2**8, max_len=2**15):
         return_int = return_int * b58_factors[slice_len] + slice_total
         data_clean = data_clean[slice_len:]
     output_len = int(data_len * 0.7322476243909465)
-    try:
-        return (b"\x00" * leading_null_count) + return_int.to_bytes(output_len << 1, "big").lstrip(b"\x00")
-    except AttributeError:
-        return (b"\x00" * leading_null_count) + ('%%0%dx' % (output_len << 1) % return_int).decode('hex')[-output_len:].lstrip(b"\x00")
+    return (b"\x00" * leading_null_count) + return_int.to_bytes(output_len << 1, "big").lstrip(b"\x00")
+
 
 @numargs(1)
-def FN_zlib_inflate(data, args):
-    wbits, = args
+def fn_zlib_inflate(data, args):
+    (wbits,) = args
+    wbits = coerce_to_int(wbits, "zlib_inflate", accept_null=False)
     data = data.encode() if type(data) == str else data
-    if not isinstance(wbits, int):
-        raise Exception("zlib_inflate(): requires an integer as the wbits value")
     try:
         return zlib.decompress(data, wbits)
     except zlib.error as exc:
-        if not any([wbits in range(-15, -7), wbits in range(8, 16), wbits in range(24, 32), wbits in range(40, 48)]):
+        if not any(
+            [
+                wbits in range(-15, -7),
+                wbits in range(8, 16),
+                wbits in range(24, 32),
+                wbits in range(40, 48),
+            ]
+        ):
             raise Exception("zlib_inflate(): invalid wbits value provided")
-        raise Exception("zlib_inflate(): %s" % exc)
+        raise Exception(f"zlib_inflate(): {exc}")
 
-def getargs(g):
+
+def get_args(g):
     global g_record
     global g_register
 
     args = ()
-    toknum, tokval, _, _, _ = g.next()
-    tokminus = False
+    token_type, token_value, _, _, _ = g.next()
+    token_minus = False
 
-    if toknum in [tokenize.NAME, tokenize.ENDMARKER]:
+    if token_type in [tokenize.NAME, tokenize.ENDMARKER]:
         g.prev()
         return args
 
-    if toknum == tokenize.NEWLINE:
+    if token_type == tokenize.NEWLINE:
         return args
 
-    if tokval != "(":
+    if token_value != "(":
         raise Exception("syntax error")
 
     while True:
-        toknum, tokval = g.next()[0:2]
+        token_type, token_value = g.next()[0:2]
 
-        if tokval == ")":
-            break
+        if token_type == tokenize.OP:
+            if token_value == ")":
+                break
+            if token_value == "-":
+                token_minus = True
+                continue
 
-        if tokval == ",":
-            continue
-
-        if tokval == "-":
-            tokminus = True
-            continue
-
-        if toknum == tokenize.NUMBER:
-            tokval = int(tokval, 0)
-            if tokminus:
-                tokval = - tokval
-        elif tokminus:
-            raise Exception("Cannot negate '%s' with '-' operator" % tokval)
-        elif toknum == tokenize.STRING:
-            tokval = tokval[1:-1]
-            tokval = tokval.encode("latin1").decode("unicode-escape")
-            if PY2:
-                tokval = tokval.encode("latin1")
-        elif toknum == tokenize.NAME:
-            if tokval in g_record:
-                tokval = g_record[tokval]
-            elif tokval in g_register:
-                tokval = g_register[tokval]
+        if token_type == tokenize.NUMBER:
+            token_value = int(token_value, 0)
+            if token_minus:
+                token_value = -token_value
+        elif token_minus:
+            raise Exception(f"Cannot negate '{token_value}' with '-' operator")
+        elif token_type == tokenize.STRING:
+            token_value = token_value[1:-1]
+            token_value = token_value.encode("latin1").decode("unicode-escape")
+        elif token_type == tokenize.NAME:
+            if token_value in g_record:
+                token_value = g_record[token_value]
+            elif token_value in g_register:
+                token_value = g_register[token_value]
             else:
-                raise Exception("the field and register '%s' does not exist" % tokval)
+                raise Exception(f"the field and register '{token_value}' does not exist")
         else:
-            raise Exception("syntax error")
+            raise Exception(f"syntax error parsing {tokenize.tok_name[token_type]} with value: {token_value}")
 
-        tokminus = False
-        args = args + (tokval,)
+        token_minus = False
+        args = args + (token_value,)
 
     return args
 
-def parsestmt(s):
+
+def parse_statement(s):
     # always emit the decrypted value even if not requested
     if s.find("emit(") == -1:
         s = s + " emit('decrypted') "
@@ -446,85 +513,88 @@ def parsestmt(s):
             raise Exception("syntax error")
 
         if cmd in ("atob", "b64"):
-            yield FN_atob, getargs(g)
+            yield fn_atob, get_args(g)
 
         elif cmd == "btoa":
-            yield FN_btoa, getargs(g)
+            yield fn_btoa, get_args(g)
 
         elif cmd == "hex":
-            yield FN_hex, getargs(g)
+            yield fn_hex, get_args(g)
 
         elif cmd == "unhex":
-            yield FN_unhex, getargs(g)
+            yield fn_unhex, get_args(g)
 
         elif cmd == "rol":
-            yield FN_rol, getargs(g)
+            yield fn_rol, get_args(g)
 
         elif cmd == "ror":
-            yield FN_ror, getargs(g)
+            yield fn_ror, get_args(g)
 
         elif cmd == "rotx":
-            yield FN_rotx, getargs(g)
+            yield fn_rotx, get_args(g)
 
         elif cmd == "xor":
-            yield FN_xor, getargs(g)
+            yield fn_xor, get_args(g)
 
         elif cmd == "rc4":
-            yield FN_rc4, getargs(g)
+            yield fn_rc4, get_args(g)
 
         elif cmd == "emit":
-            yield FN_emit, getargs(g)
+            yield fn_emit, get_args(g)
 
         elif cmd == "load":
-            yield FN_load, getargs(g)
+            yield fn_load, get_args(g)
 
         elif cmd == "save":
-            yield FN_save, getargs(g)
+            yield fn_save, get_args(g)
 
         elif cmd == "substr":
-            yield FN_substr, getargs(g)
+            yield fn_substr, get_args(g)
+
+        elif cmd == "slice":
+            yield fn_slice, get_args(g)
 
         elif cmd == "rev":
-            yield FN_rev, getargs(g)
+            yield fn_rev, get_args(g)
 
         elif cmd == "b32":
-            yield FN_b32, getargs(g)
+            yield fn_b32, get_args(g)
 
         elif cmd == "ascii":
-            yield FN_ascii, getargs(g)
+            yield fn_ascii, get_args(g)
 
         elif cmd == "decode":
-            yield FN_decode, getargs(g)
+            yield fn_decode, get_args(g)
 
         elif cmd == "escape":
-            yield FN_escape, getargs(g)
+            yield fn_escape, get_args(g)
 
         elif cmd == "unescape":
-            yield FN_unescape, getargs(g)
+            yield fn_unescape, get_args(g)
 
         elif cmd == "htmlescape":
-            yield FN_htmlescape, getargs(g)
+            yield fn_htmlescape, get_args(g)
 
         elif cmd == "htmlunescape":
-            yield FN_htmlunescape, getargs(g)
+            yield fn_htmlunescape, get_args(g)
 
         elif cmd == "tr":
-            yield FN_tr, getargs(g)
+            yield fn_tr, get_args(g)
 
         elif cmd == "find":
-            yield FN_find, getargs(g)
+            yield fn_find, get_args(g)
 
         elif cmd == "b32re":
-            yield FN_b32re, getargs(g)
+            yield fn_b32re, get_args(g)
 
         elif cmd == "b64re":
-            yield FN_b64re, getargs(g)
+            yield fn_b64re, get_args(g)
 
         elif cmd == "b58":
-            yield FN_b58, getargs(g)
+            yield fn_b58, get_args(g)
 
         elif cmd == "zlib_inflate":
-            yield FN_zlib_inflate, getargs(g)
+            yield fn_zlib_inflate, get_args(g)
 
         else:
-            raise Exception("'%s' is not a recognized command" % cmd)
+            raise Exception(f"'{cmd}' is not a recognized command")
