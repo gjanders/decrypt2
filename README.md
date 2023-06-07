@@ -213,6 +213,14 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.3.14
+Merged pull request from Steven (malvidin on github)
+
+This new version includes:
+- Improved handling of negative integers
+- Update so xor doesn't accept negative integers
+- substr now accepts a null as count to return to end of string
+
 ## 2.3.13
 Merged pull request from Steven (malvidin on github)
 
