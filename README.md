@@ -216,6 +216,17 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.4.0
+Merged pull request from Steven (malvidin on github)
+
+This new version includes:
+- Removal of python2 support
+- Cleanup code formatting
+- Remove unused COMMA handling
+- Add slice function
+
+Note that 2.3.14 will be the last version of decrypt2 supporting python2
+
 ## 2.3.14
 Merged pull request from Steven (malvidin on github)
 
