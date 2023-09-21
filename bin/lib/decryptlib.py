@@ -84,8 +84,10 @@ def fn_emit(data, args):
 @numargs(1)
 def fn_decode(data, args):
     (codec,) = args
+    if isinstance(data, str):
+        data = str.encode(data)    
     try:
-        data = data.decode(codec, "replace") if isinstance(data, bytes) else data
+        data = data.decode(codec, "replace") #if isinstance(data, bytes) else data
     except LookupError:
         raise Exception(f"the codec '{codec}' is not valid")
     return data
