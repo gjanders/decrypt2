@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import ast
 import base64
 import binascii
 import itertools
@@ -92,6 +93,15 @@ def fn_decode(data, args):
         raise Exception(f"the codec '{codec}' is not valid")
     return data
 
+@numargs(1)
+def fn_literal_decode(data, args):
+    (codec,) = args
+    try:
+        data_literal = ast.literal_eval("b'"+data+"'")
+        data_decoded = data_literal.decode(codec)
+    except LookupError:
+        raise Exception(f"the codec '{codec}' is not valid")
+    return data_decoded
 
 @numargs(0)
 def fn_escape(data, args):
@@ -567,6 +577,9 @@ def parse_statement(s):
 
         elif cmd == "decode":
             yield fn_decode, get_args(g)
+
+        elif cmd == "litdecode":
+            yield fn_literal_decode, get_args(g)
 
         elif cmd == "escape":
             yield fn_escape, get_args(g)
