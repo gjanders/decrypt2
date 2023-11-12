@@ -40,30 +40,39 @@ class Tokenizer(object):
         return self.chain[self.index]
 
 
-def numargs(argcount):
+def numargs(*argcount):
     def numargs_decorator(func):
         def func_wrapper(data, args):
-            if len(args) == argcount:
+            if isinstance(argcount, tuple) and len(args) in argcount:
+                # Pad args to maximum argcount value with 'null'
+                args = args + ("null",) * (max(argcount) - len(args))
                 return func(data, args)
             else:
                 func_name = func.__name__[3:]
-                raise Exception(f"{func_name}() takes exactly {argcount} arguments, {len(args)} given")
+                if len(argcount) == 1:
+                    raise Exception(
+                        f"{func_name}() takes exactly {argcount[0]} arguments, {len(args)} given"
+                    )
+                else:
+                    raise Exception(
+                        f"{func_name}() takes number of arguments in {argcount}, {len(args)} given"
+                    )
 
         return func_wrapper
 
     return numargs_decorator
 
 
-def coerce_to_int(input_parameter, calling_func, accept_null=True):
+def coerce_to_int(input_parameter, calling_func, accept_null=True, null_default=None):
     if accept_null and isinstance(input_parameter, str):
         if input_parameter.lower() in ("null", "none", "undefined", ""):
-            return None
+            return null_default
 
     try:
         return int(input_parameter)
     except:
         or_null_option = " or 'null'" if accept_null else ""
-        raise Exception(f"{calling_func}() parameter must be integer {or_null_option}")
+        raise Exception(f"{calling_func}() parameter must be integer{or_null_option}")
 
 
 @numargs(0)
@@ -167,11 +176,12 @@ def fn_unhex(data, args):
 
 @numargs(1)
 def fn_rotx(data, args):
+    fn_name = "rotx"
     (count,) = args
-    count = coerce_to_int(count, "rotx", accept_null=False)
+    count = coerce_to_int(count, fn_name, accept_null=False)
 
     if type(data) != str:
-        raise Exception("rotx(): ROT only supports alphabetical characters A-Z")
+        raise Exception(f"{fn_name}(): ROT only supports alphabetical characters A-Z")
 
     left = "abcdefghijklmnopqrstuvwxyz"
     right = left[count:] + left[:count]
@@ -189,8 +199,9 @@ def fn_rotx(data, args):
 
 @numargs(1)
 def fn_ror(data, args):
+    fn_name = "ror"
     (count,) = args
-    count = coerce_to_int(count, "ror", accept_null=False)
+    count = coerce_to_int(count, fn_name, accept_null=False)
     data = [ord(c) for c in data] if type(data) == str else data
     return bytes([_rotate_right(c, count) for c in data])
 
@@ -201,8 +212,9 @@ def _rotate_right(c, shift):
 
 @numargs(1)
 def fn_rol(data, args):
+    fn_name = "rol"
     (count,) = args
-    count = coerce_to_int(count, "rol", accept_null=False)
+    count = coerce_to_int(count, fn_name, accept_null=False)
     data = [ord(c) for c in data] if type(data) == str else data
     return bytes([_rotate_left(c, count) for c in data])
 
@@ -246,11 +258,12 @@ def fn_load(data, args):
     return g_register[var]
 
 
-@numargs(2)
+@numargs(1, 2)
 def fn_substr(data, args):
+    fn_name = "substr"
     start, count = args
-    start = coerce_to_int(start, "substr", accept_null=False)
-    count = coerce_to_int(count, "substr", accept_null=True)
+    start = coerce_to_int(start, fn_name, accept_null=False)
+    count = coerce_to_int(count, fn_name, accept_null=True)
     if start < 0:
         start = max(len(data) + start, 0)
     if count is None:
@@ -260,21 +273,22 @@ def fn_substr(data, args):
     else:
         end = start + count
     if start > len(data):
-        raise Exception("substr(): start offset exceeds length of data")
+        raise Exception(f"{fn_name}(): start offset exceeds length of data")
     return data[start:end]
 
 
-@numargs(2)
+@numargs(1, 2)
 def fn_slice(data, args):
+    fn_name = "slice"
     start, end = args
-    start = coerce_to_int(start, "slice", accept_null=True)
-    end = coerce_to_int(end, "slice", accept_null=True)
+    start = coerce_to_int(start, fn_name, accept_null=True)
+    end = coerce_to_int(end, fn_name, accept_null=True)
     if isinstance(end, str) and end.lower() in ("null", "none", "undefined", ""):
         end = None
     if isinstance(start, int) and isinstance(end, int) or end is None:
         return data[start:end]
     else:
-        raise Exception("slice(): start and end must be integers or 'null'")
+        raise Exception(f"{fn_name}(): start and end must be integers or 'null'")
 
 
 @numargs(0)
@@ -284,8 +298,8 @@ def fn_rev(data, args):
 
 @numargs(1)
 def fn_xor(data, args):
+    fn_name = "xor"
     (key,) = args
-
     key = [key] if isinstance(key, int) else [ord(c) for c in key]
     for key_int in key:
         if key_int < 0 or key_int > 255:
@@ -298,12 +312,13 @@ def fn_xor(data, args):
 
 @numargs(1)
 def fn_rc4(data, args):
+    fn_name = "rc4"
     (key,) = args
 
     data = [ord(c) for c in data] if type(data) == str else data
 
     if isinstance(key, int):
-        raise Exception("rc4(): does not accept an integer as a key")
+        raise Exception(f"{fn_name}(): does not accept an integer as a key")
 
     S = list(range(256))
     j = 0
@@ -338,10 +353,11 @@ def fn_tr(data, args):
     return data.translate(trans_chars)
 
 
-@numargs(2)
+@numargs(1, 2)
 def fn_find(data, args):
+    fn_name = "find"
     sub, start = args
-    start = coerce_to_int(start, "find", accept_null=True)
+    start = coerce_to_int(start, fn_name, accept_null=True)
     if isinstance(sub, (int, bytes)):
         data = data if isinstance(data, bytes) else data.encode("utf8", errors="ignore")
         return data.find(sub, start)
@@ -418,14 +434,51 @@ def _base58_decode(data, slice_len=2**8, max_len=2**15):
     return (b"\x00" * leading_null_count) + return_int.to_bytes(output_len << 1, "big").lstrip(b"\x00")
 
 
-@numargs(1)
+@numargs(0, 1)
 def fn_zlib_inflate(data, args):
+    fn_name = "zlib_inflate"
     (wbits,) = args
-    wbits = coerce_to_int(wbits, "zlib_inflate", accept_null=False)
+    # Default to raw inflate, wbits -15
+    wbits = coerce_to_int(wbits, fn_name, accept_null=True, null_default=-15)
     data = data.encode() if type(data) == str else data
     try:
         return zlib.decompress(data, wbits)
     except zlib.error as exc:
+        if not any(
+            [
+                wbits in range(-15, -7),
+                wbits == 0,
+                wbits in range(8, 16),
+                wbits in range(24, 32),
+                wbits in range(40, 48),
+            ]
+        ):
+            raise Exception(
+                f"{fn_name}(): invalid wbits value provided\n" + zlib.decompress.__doc__
+            )
+        raise Exception(f"{fn_name}(): {exc}\n" + zlib.decompress.__doc__)
+
+
+@numargs(0, 1, 2)
+def fn_zlib_deflate(data, args):
+    fn_name = "zlib_deflate"
+    level, wbits = args
+    # Default use Z_DEFAULT_COMPRESSION
+    level = coerce_to_int(level, fn_name, accept_null=True, null_default=-1)
+    # Default use raw deflate (no header or checksum)
+    wbits = coerce_to_int(wbits, fn_name, accept_null=True, null_default=-15)
+    data = data.encode() if type(data) == str else data
+    try:
+        compress_obj = zlib.compressobj(level=level, wbits=wbits)
+        compressed_data = compress_obj.compress(data)
+        compressed_data += compress_obj.flush()
+        return compressed_data
+    except (ValueError, zlib.error) as exc:
+        if level not in range(-1, 10):
+            raise Exception(
+                f"{fn_name}(): invalid level value provided\n"
+                + zlib.compressobj.__doc__
+            )
         if not any(
             [
                 wbits in range(-15, -7),
@@ -434,8 +487,11 @@ def fn_zlib_inflate(data, args):
                 wbits in range(40, 48),
             ]
         ):
-            raise Exception("zlib_inflate(): invalid wbits value provided")
-        raise Exception(f"zlib_inflate(): {exc}")
+            raise Exception(
+                f"{fn_name}(): invalid wbits value provided\n"
+                + zlib.compressobj.__doc__
+            )
+        raise Exception(f"{fn_name}(): {exc}\n" + zlib.compressobj.__doc__)
 
 
 def get_args(g):
@@ -595,6 +651,9 @@ def parse_statement(s):
 
         elif cmd == "zlib_inflate":
             yield fn_zlib_inflate, get_args(g)
+
+        elif cmd == "zlib_deflate":
+            yield fn_zlib_deflate, get_args(g)
 
         else:
             raise Exception(f"'{cmd}' is not a recognized command")

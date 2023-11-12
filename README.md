@@ -1,4 +1,4 @@
-
+```
                     .___                                  __
                   __| _/____   ___________ ___.__._______/  |_
                  / __ |/ __ \_/ ___\_  __ <   |  |\____ \   __\
@@ -8,7 +8,7 @@
 
                         Original author: Michael Zalewski <mjz@hexize.com>
                         New maintainer: Gareth Anderson
-
+```
 
 DECRYPT is a set of Splunk commands which provide encryption and
 decryption routines commonly used in malware communication and data
@@ -133,15 +133,20 @@ Returns a reverse-endian base32 decoded string, as used in the SunBurst DGA.
 Returns a reverse-endian base64 decoded string.
 
 `zlib_inflate()`
-Returns zlib.decompress() inflated bytes. The window size (wbits) must be provided.
+Returns zlib.decompress() inflated bytes. Default window size of -15 (raw inflate) is used if a wbits value is not provided.
+
+`zlib_deflate()`
+Returns zlib.compress() deflated bytes. Default level of -1 (currently 6) and window size of -15 (raw deflate) if values are not provided.
 
 _Note: you must use **single quotes** around the strings._
 
 # Function Arguments
 ## Strings
-Strings can be specified by encapsulating values in apostrophes (single quote). Strings accept Pythonic escape sequences, so hexadecimal and octal values can be specified with \xhh and \ooo respectively.
+Strings can be specified by encapsulating values in apostrophes (single quote). Strings accept Pythonic escape sequences, so hexadecimal and octal values can be specified with `\xhh` and `\ooo` respectively.
+Unicode values can be expressed as `\u0000` or `\U00000000`
 
 `'This is a valid string'`
+
 `'This is also \x61 valid string.'`
 
 Quotation marks (double quotes) **cannot** be used.
@@ -161,19 +166,23 @@ The above example demonstrates passing the sourcetype field as the key to the xo
 Fields saved using the save command can also be referenced.
 
 `... | decrypt field=_raw substr(0,1) save('1byte') substr(1, 4096) xor(1byte) ...`
+
 ## Style
 Functions which take no arguments do not need parenthesis in order for syntax checking to pass. The following examples will pass syntax checks and execute the same.
 
 `... | decrypt field=_raw b64 hex unhex`
+
 `... | decrypt field=_raw b64() hex() unhex()`
+
 `... | decrypt field=_raw b64() hex unhex`
 
 New lines can be used to break up command sequences for easier readability.
-
-`... | decrypt field=_raw`
-`      b64`
-`      hex`
-`      unhex`
+```
+... | decrypt field=_raw
+      b64
+      hex
+      unhex
+```
 # Recipes
 ## XOR
 `... | decrypt field=data xor('secret') emit('result')`
@@ -182,26 +191,32 @@ New lines can be used to break up command sequences for easier readability.
 ## Base64 decode, XOR
 `... | decrypt field=data b64 xor('secret') emit('result')`
 ## Base64 decode, XOR with first byte
-`... | decrypt field=data`
-      `b64`
-      `save('bin')`
-      `substr(0, 1) emit('key')`
-      `load('bin')`
-      `substr(1, 9999) xor(key) emit('result')`
+```
+... | decrypt field=data
+      b64
+      save('bin')
+      substr(0, 1) emit('key')
+      load('bin')
+      substr(1, 9999) xor(key) emit('result')
+```
 ## Brute force RC4
-`... | decrypt field=data`
-      `b64`
-      `save('orig') rc4('secret') emit('rc4-secret')`
-      `load('orig') rc4('password') emit('rc4-password')`
-      `load('orig') rc4('abc123') emit('rc4-abc123')`
-      `load('orig') rc4('aabbccdd') emit('rc4-aabbccdd')`
+```
+... | decrypt field=data
+      b64
+      save('orig') rc4('secret') emit('rc4-secret')
+      load('orig') rc4('password') emit('rc4-password')
+      load('orig') rc4('abc123') emit('rc4-abc123')
+      load('orig') rc4('aabbccdd') emit('rc4-aabbccdd')
+```
 ## Brute force XOR key
-`... | decrypt field=data`
-      `b64`
-      `save('data') xor(0x01) emit('xor0x01')`
-      `load('data') xor(0x02) emit('xor0x02')`
-      `load('data') xor(0x03) emit('xor0x03')`
-      `...`
+```
+... | decrypt field=data
+      b64
+      save('data') xor(0x01) emit('xor0x01')
+      load('data') xor(0x02) emit('xor0x02')
+      load('data') xor(0x03) emit('xor0x03')
+      ...
+```
 ## Reverse the data field
 `... | decrypt field=data rev`
 
@@ -216,6 +231,10 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.4.1
+- Added support for null argument padding, so `find('decrypt2')` is equivalent to `find('decrypt2', 0)`
+- Added zlib_deflate for internal validation of zlib_inflate, which can also be used for information analysis
+
 ## 2.4.0
 Merged pull request from Steven (malvidin on github)
 
