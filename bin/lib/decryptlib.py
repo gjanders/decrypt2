@@ -4,9 +4,11 @@
 import base64
 import binascii
 import itertools
+import math
 import string
 import tokenize
 import zlib
+from collections import Counter
 from html import escape as html_escape, unescape as html_unescape
 from io import StringIO
 
@@ -494,6 +496,13 @@ def fn_zlib_deflate(data, args):
         raise Exception(f"{fn_name}(): {exc}\n" + zlib.compressobj.__doc__)
 
 
+@numargs(0)
+def fn_entropy(data, args):
+    data_len = len(data)
+    counter = Counter(data)
+    return abs(sum(c/data_len * math.log2(c/data_len) for c in counter.values()))
+
+
 def get_args(g):
     global g_record
     global g_register
@@ -654,6 +663,9 @@ def parse_statement(s):
 
         elif cmd == "zlib_deflate":
             yield fn_zlib_deflate, get_args(g)
+
+        elif cmd == "entropy":
+            yield fn_entropy, get_args(g)
 
         else:
             raise Exception(f"'{cmd}' is not a recognized command")
