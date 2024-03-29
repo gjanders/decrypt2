@@ -244,6 +244,9 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.4.2
+Updated python SDK to 2.0.1
+
 ## 2.4.1
 - Added support for null argument padding, so `find('decrypt2')` is equivalent to `find('decrypt2', 0)`
 - Added zlib_deflate for internal validation of zlib_inflate, which can also be used for information analysis
