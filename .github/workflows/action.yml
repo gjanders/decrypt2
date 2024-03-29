@@ -7,7 +7,6 @@ jobs:
   pre-release:
     name: "Run on push - Add Utilities & App Inspect"
     runs-on: "ubuntu-latest"
-    environment: public-github
 
     steps:
       - uses: VatsalJagani/splunk-app-action@v4
