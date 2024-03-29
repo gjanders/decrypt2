@@ -239,6 +239,10 @@ New lines can be used to break up command sequences for easier readability.
 ## Decrypt SunBurst DGA with reverse endian base32
 `... | decrypt field=data tr('ph2eifo3n5utg1j8d94qrvbmk0sal76c', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567') b32re`
 
+# Troubleshooting
+Scenario - Email alert fails to trigger when a decrypted field is used in the results. Solution: In this case the base64 had special characters which were not rendered by the browser, when running the python b64decode the \x00 characters were visible, but in the Splunk UI it was completely invisible. Adding an ascii() into the decrypt2 arguments after the 64 resulted in the special characters just becoming "." symbols which are easily escaped with a rex mode=sed
+Alternatively, using escape() you can see in the browser what it looks like.
+
 # Contributors
 Shannon Davis (Splunk)
 Steven (malvidin on github)
