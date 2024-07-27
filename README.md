@@ -14,6 +14,9 @@ DECRYPT is a set of Splunk commands which provide encryption and
 decryption routines commonly used in malware communication and data
 exfiltration.
 
+# SplunkBase
+A vailable on SplunkBase as [DECRYPT2](https://splunkbase.splunk.com/app/5565)
+
 # Installation
 DECRYPT is a standard Splunk App and requires no special configuration.
 
