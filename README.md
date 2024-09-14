@@ -248,6 +248,9 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.4.3
+Updated splunk python SDK from 2.0.1 to 2.0.2 as per Splunk cloud compatibility requirements
+
 ## 2.4.2
 Updated python SDK to 2.0.1
 
