@@ -20,9 +20,21 @@ import decryptlib
 class DecryptCommand(StreamingCommand):
     field = Option(require=False, default="_raw", validate=validators.Fieldname())
 
+    def prepare(self) -> None:
+        """Prepare for execution.
+
+        This method should be overridden in search command classes that wish to examine and update their configuration
+        or option settings prior to execution. It is called during the getinfo exchange before command metadata is sent
+        to splunkd.
+        """
+
+        # this forces the field to exist at the end
+        self.configuration.required_fields = [self.field]
+
+        super().prepare()
+
     def stream(self, records):
         stmt = " ".join(self.fieldnames)
-
         try:
             for record in records:
                 try:
@@ -36,8 +48,7 @@ class DecryptCommand(StreamingCommand):
                             result = fn(result, args)
 
                 except Exception as e:
-                    exception_string = str(e)
-                    record[".decrypt_failure__"] = exception_string
+                    record[".decrypt_failure__"] = str(e)
 
                 yield record
         except csv.Error:
