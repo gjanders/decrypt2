@@ -15,6 +15,8 @@ from splunklib.searchcommands import (
 )
 import decryptlib
 
+FAILURE_FIELD = ".decrypt_failure__"
+
 
 @Configuration()
 class DecryptCommand(StreamingCommand):
@@ -27,11 +29,10 @@ class DecryptCommand(StreamingCommand):
         or option settings prior to execution. It is called during the getinfo exchange before command metadata is sent
         to splunkd.
         """
-
         # this forces the field to exist at the end
         self.configuration.required_fields = [self.field]
-
-        super().prepare()
+        # this means we're only sent the field the user asked for
+        self.configuration.clear_required_fields = True
 
     def stream(self, records):
         stmt = " ".join(self.fieldnames)
@@ -48,7 +49,7 @@ class DecryptCommand(StreamingCommand):
                             result = fn(result, args)
 
                 except Exception as e:
-                    record[".decrypt_failure__"] = str(e)
+                    record[FAILURE_FIELD] = str(e)
 
                 yield record
         except csv.Error:
