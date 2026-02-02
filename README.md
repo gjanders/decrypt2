@@ -251,6 +251,11 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.4.5
+Updated splunk python SDK from 2.1.0 to 2.1.1
+
+Merged an enhancement by @yaleman to ensure the fields are sent to the command as expected
+
 ## 2.4.4
 Updated splunk python SDK from 2.0.2 to 2.1.0 as per Splunk cloud compatibility requirements
 
