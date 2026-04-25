@@ -251,6 +251,9 @@ Shannon Davis (Splunk)
 Steven (malvidin on github)
 
 # Release Notes
+## 2.4.6
+Adding python.required in `commands.conf` as requested by splunkbase, this is supported in 10.2 and above. Harmless warning messages may occur on older Splunk versions.
+
 ## 2.4.5
 Updated splunk python SDK from 2.1.0 to 2.1.1
 
